@@ -1,4 +1,7 @@
-import json
+# Importamos módulos necesarios
+import json # Para guardar y cargar el estado de la mascota en formato JSON
+import os   # Para verificar si el archivo de estado existe en el sistema
+
 
 # Clase padre Mascota con atributos comunes y metodos generales
 class Mascota:
@@ -64,3 +67,68 @@ class Mamifero(Mascota):
     def correr(self):
         print(f"{self.nombre} esta corriendo.")
 
+# Función para cargar el estado desde un archivo existente
+def cargar_estado(nombre_archivo):
+    with open(nombre_archivo, "r") as f:
+        datos = json.load(f)  # Cargamos los datos como diccionario
+
+    # Seleccionamos la clase correspondiente según el tipo
+    tipo = datos['tipo']
+    clases = {'Ave': Ave, 'Reptil': Reptil, 'Pez': Pez, 'Anfibio': Anfibio, 'Mamifero': Mamifero}
+    mascota = clases[tipo](datos['nombre'], tipo, datos['fecha_nacimiento'])
+
+    # Actualizamos todos los atributos con los datos guardados
+    mascota.__dict__.update(datos)
+    return mascota
+
+# Funcion principal del juego
+def jugar():
+    # Preguntamos si el usuario quiere cargar una mascota existente
+    nombre_archivo = input("¿Nombre del archivo de estado? (ej: Firulais.status.x): ")
+
+    if os.path.exists(nombre_archivo):
+        mascota = cargar_estado(nombre_archivo)
+        print(f"Archivo cargado. Bienvenido de nuevo, {mascota.nombre}!")
+    else:
+        # Si no existe, creamos una nueva mascota
+        nombre = input("Nombre de la mascota: ")
+        tipo = input("Tipo de mascota (Ave, Reptil, Pez, Anfibio, Mamifero): ")
+        fecha = input("Fecha de nacimiento: ")
+        clases = {'Ave': Ave, 'Reptil': Reptil, 'Pez': Pez, 'Anfibio': Anfibio, 'Mamifero': Mamifero}
+        mascota = clases[tipo](nombre, tipo, fecha)
+
+    # Bucle principal del juego
+    while mascota.viva:
+        # Mostramos el estado actual
+        print(f"\nEstado de {mascota.nombre}:")
+        print(f"Hambre: {mascota.status_hungry}")
+        print(f"Sueño: {mascota.status_sleep}")
+        print(f"Suciedad: {mascota.status_dirty}")
+        print(f"Felicidad: {mascota.status_happiness}")
+
+        # Preguntamos que acción desea realizar el usuario
+        accion = input("¿Qué quieres hacer? (alimentar, dormir, limpiar, saltar, guardar, salir): ")
+
+        # Ejecutamos la accion correspondiente
+        if accion == "alimentar":
+            mascota.alimentar()
+        elif accion == "dormir":
+            mascota.dormir()
+        elif accion == "limpiar":
+            mascota.limpiar()
+        elif accion == "saltar":
+            mascota.saltar()
+        elif accion == "guardar":
+            mascota.guardar_estado()
+            print("Estado guardado.")
+        elif accion == "salir":
+            break
+
+        # Actualizamos el estado despues de cada accion
+        mascota.actualizar_estado()
+
+    # Mensaje final cuando termina el juego
+    print("Fin del juego.")
+
+# Ejecutamos la funcion principal
+jugar()
