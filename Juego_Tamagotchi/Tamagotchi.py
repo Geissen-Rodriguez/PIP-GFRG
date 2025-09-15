@@ -1,6 +1,7 @@
-# Importamos módulos necesarios
+# Importamos modulos necesarios
 import json # Para guardar y cargar el estado de la mascota en formato JSON
-import os   # Para verificar si el archivo de estado existe en el sistema
+import os # Para verificar si el archivo de estado existe en el sistema
+import re  # Para validar el formato de fecha
 
 
 # Clase padre Mascota con atributos comunes y metodos generales
@@ -16,34 +17,34 @@ class Mascota:
         self.viva = True
 
 # Metodo comun para todas las mascotas
-def saltar(self):
+    def saltar(self):
         print(f"{self.nombre} está saltando.")
 
 # Metodos para los estados
 
-def alimentar(self):
-        self.status_hungry = min(100, self.status_hungry + 20)
+    def alimentar(self):
+            self.status_hungry = min(100, self.status_hungry + 20)
 
-def dormir(self):
-        self.status_sleep = min(100, self.status_sleep + 20)
+    def dormir(self):
+            self.status_sleep = min(100, self.status_sleep + 20)
 
-def limpiar(self):
-        self.status_dirty = min(100, self.status_dirty + 20)
+    def limpiar(self):
+            self.status_dirty = min(100, self.status_dirty + 20)
 
 
-# Metodo que actualiza el estado general y verifica si la mascota muere
-def actualizar_estado(self):
-        if self.status_hungry < 30:
-            self.status_happiness -= 10
-        if self.status_hungry <= 0 or self.status_sleep <= 0 or self.status_dirty <= 0:
-            self.viva = False
-            print(f"{self.nombre} ha muerto.")
+    # Metodo que actualiza el estado general y verifica si la mascota muere
+    def actualizar_estado(self):
+            if self.status_hungry < 30:
+                self.status_happiness -= 10
+            if self.status_hungry <= 0 or self.status_sleep <= 0 or self.status_dirty <= 0:
+                self.viva = False
+                print(f"{self.nombre} ha muerto.")
 
-# Metodo para guardar el estado actual en un archivo
-def guardar_estado(self):
-        filename = f"{self.nombre}.status.x"
-        with open(filename, "w") as f:
-            json.dump(self.__dict__, f)
+    # Metodo para guardar el estado actual en un archivo
+    def guardar_estado(self):
+            filename = f"{self.nombre}.status.x"
+            with open(filename, "w") as f:
+                json.dump(self.__dict__, f)
 
 # Clases hijas por tipo de mascota con metodos unicos
 
@@ -69,34 +70,48 @@ class Mamifero(Mascota):
 
 # Función para cargar el estado desde un archivo existente
 def cargar_estado(nombre_archivo):
-    with open(nombre_archivo, "r") as f:
-        datos = json.load(f)  # Cargamos los datos como diccionario
+  try:  # Manejo de errores al cargar archivo
+        with open(nombre_archivo, "r") as f:
+            datos = json.load(f)
 
-    # Seleccionamos la clase correspondiente según el tipo
-    tipo = datos['tipo']
-    clases = {'Ave': Ave, 'Reptil': Reptil, 'Pez': Pez, 'Anfibio': Anfibio, 'Mamifero': Mamifero}
-    mascota = clases[tipo](datos['nombre'], tipo, datos['fecha_nacimiento'])
-
-    # Actualizamos todos los atributos con los datos guardados
-    mascota.__dict__.update(datos)
-    return mascota
+        tipo = datos['tipo']
+        clases = {'Ave': Ave, 'Reptil': Reptil, 'Pez': Pez, 'Anfibio': Anfibio, 'Mamifero': Mamifero}
+        mascota = clases[tipo](datos['nombre'], tipo, datos['fecha_nacimiento'])
+        mascota.__dict__.update(datos)
+        return mascota
+  except FileNotFoundError:
+        print(f" No se encontro el archivo '{nombre_archivo}'.")
+        return None
+  except KeyError:
+        print("El archivo tiene un tipo de mascota no valido.")
+        return None
 
 # Funcion principal del juego
 def jugar():
-    # Preguntamos si el usuario quiere cargar una mascota existente
-    nombre_archivo = input("¿Nombre del archivo de estado? (ej: Firulais.status.x): ")
+    clases = {'Ave': Ave, 'Reptil': Reptil, 'Pez': Pez, 'Anfibio': Anfibio, 'Mamifero': Mamifero}
+    nombre_archivo = input("¿Nombre del archivo de estado? (ej: Firulais.status.x): ").strip()
 
-    if os.path.exists(nombre_archivo):
+    if nombre_archivo and os.path.exists(nombre_archivo):  # Validacion si el archivo existe y no esta vacio
         mascota = cargar_estado(nombre_archivo)
+        if mascota is None:  # Si hubo error al cargar se termina el juego
+            return
         print(f"Archivo cargado. Bienvenido de nuevo, {mascota.nombre}!")
     else:
-        # Si no existe, creamos una nueva mascota
-        nombre = input("Nombre de la mascota: ")
-        tipo = input("Tipo de mascota (Ave, Reptil, Pez, Anfibio, Mamifero): ")
-        fecha = input("Fecha de nacimiento: ")
-        clases = {'Ave': Ave, 'Reptil': Reptil, 'Pez': Pez, 'Anfibio': Anfibio, 'Mamifero': Mamifero}
-        mascota = clases[tipo](nombre, tipo, fecha)
+        nombre = input("Nombre de la mascota: ").strip()
+        tipo = input("Tipo de mascota (Ave, Reptil, Pez, Anfibio, Mamifero): ").strip()
 
+        while tipo not in clases:  # Validacion del tipo de mascota
+            print("Tipo invalido. Intenta nuevamente.")
+            tipo = input("Tipo de mascota (Ave, Reptil, Pez, Anfibio, Mamifero): ").strip()
+
+        fecha = input("Fecha de nacimiento (dd-mm-yyyy): ").strip()
+
+        while not re.match(r"\d{2}-\d{2}-\d{4}", fecha):  # Validacion del formato de fecha
+            print("Formato invalido. Usa dd-mm-yyyy.")
+            fecha = input("Fecha de nacimiento (dd-mm-yyyy): ").strip()
+
+        mascota = clases[tipo](nombre, tipo, fecha)
+        
     # Bucle principal del juego
     while mascota.viva:
         # Mostramos el estado actual
@@ -123,6 +138,8 @@ def jugar():
             print("Estado guardado.")
         elif accion == "salir":
             break
+        else:
+            print("Accion no reconocida. Intenta nuevamente.")  # Validacion de accion
 
         # Actualizamos el estado despues de cada accion
         mascota.actualizar_estado()
