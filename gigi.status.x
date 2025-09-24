@@ -1,0 +1,1 @@
+{"nombre": "gigi", "tipo": "Mamifero", "fecha_nacimiento": "19-02-2025", "status_hungry": 100, "status_sleep": 90, "status_dirty": 93, "status_happiness": 80, "viva": true}

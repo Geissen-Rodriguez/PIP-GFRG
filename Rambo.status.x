@@ -1,1 +1,0 @@
-{"nombre": "Rambo", "tipo": "Mamifero", "fecha_nacimiento": "19-02-1987", "status_hungry": 100, "status_sleep": 100, "status_dirty": 100, "status_happiness": 100, "viva": true}
